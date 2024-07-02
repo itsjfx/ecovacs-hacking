@@ -1,0 +1,60 @@
+#How to repack and flash root X1 image
+
+#In UART shell, run cmd:
+#Step 1: Backup ROOTFS UBI partitions
+#https://gist.github.com/Lanchon/fbfbb98e470395ecce23a65021c5f25d
+
+cat /proc/mtd
+cd /tmp
+mkdir backup
+cd /tmp/backup
+dd if=/dev/ubi0_0 of=/tmp/backup/rootfs.img bs=1M
+
+#file rootfs.img is Rootfs partition, copy /tmp/backup/rootfs.img to your PC
+#Step 2: pack and repack file: rootfs.img
+#file rootfs.img is Squashfs format, so using any squashfs-tools to extract, edit and repack file rootfs.img
+#I install squashfs-tools in Ubuntu PC to pack and repack by using this cmd:
+
+cd "folder you save rootfs.img file"
+unsquashfs -d rootfs ./rootfs.img
+
+#go to folder rootfs, edit file /etc/rc.conf, remove  (!) Flag before autostart.sh and vsftpd.sh, like this:
+
+HOSTNAME=unknown
+
+DAEMONS="pre_boot.sh mount_data.sh post_boot.sh load_ko.sh time_sync.sh
+audio_service.sh crond.sh vsftpd.sh wifi.sh ros.sh wpa_supplicant.sh medusa.sh
+data_filter.sh deebot.sh wifi_service.sh wifi_daemon.sh key_service.sh start_ap.sh
+autostart.sh goahead.sh play_boot_music.sh !adbd.sh ota_status.sh
+sl_ota_check.sh @speech_recognition.sh @start_watchdog.sh !rsyslog.sh @dog.sh !at.sh"
+
+#Repack Rootfs partition by using this cmd:
+
+cd "folder you save rootfs.img file"
+mksquashfs rootfs rootfs_mod.img -noappend -root-owned -p '/dev d 755 0 0' -p '/dev/console c 600 0 0 5 1'
+
+#Step 3: Restore Mod ROOTFS UBI partitions
+#Boot Robot to recovery mode:
+
+ubi_atomic_update_leb /dev/ubi2_0 -i "boot_mode2" -n 0
+reboot
+
+#After Robot reboot, robot boot into recovery mode, copy file rootfs_mod.img to /tmp/backup/  of X1 robot
+#run cmd to restore rootfs partition:
+
+ubiupdatevol /dev/ubi4_0 /tmp/backup/rootfs_mod.img
+
+#Boot to normal mode and reboot:
+
+ubi_atomic_update_leb /dev/ubi2_0 -i "boot_mode1" -n 0
+reboot
+
+
+# After reboot, create /data/autostart/start.sh
+vi /data/autostart/start.sh
+
+#/bin/sh
+# start telnet
+/usr/sbin/telnetd
+
+#Save and reboot. Done
