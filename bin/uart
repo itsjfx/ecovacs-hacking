@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")/../"
+sudo minicom -D /dev/ttyUSB0 -C ./captures/capture-"$(date --iso-8601=seconds)".txt
