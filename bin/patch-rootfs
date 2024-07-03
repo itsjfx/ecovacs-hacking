@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # patch script for rootfs
-# usage: patch-rootfs rootfs.img --dropbear --install-cert PATH_TO_CERT
+# usage: patch-rootfs rootfs.img --dropbear AUTHORIZED_KEY_FILE --install-cert CERT_FILE
 
 set -eu -o pipefail
 
@@ -26,12 +26,10 @@ dropbear() {
         ln -sr "$IMG"/usr/sbin/dropbear "$IMG"/usr/bin/"$cmd"
     done
 
-    if [[ -n "$1" ]]; then
-        log 'Adding key...'
-        mkdir -p -m 700 "$IMG"/root/.ssh/
-        # assume its one line and well-formed
-        install -m 0600 "$1" "$IMG"/root/.ssh/authorized_keys
-    fi
+    log 'Adding key...'
+    mkdir -p -m 700 "$IMG"/root/.ssh/
+    # assume its one line and well-formed
+    install -m 0600 "$1" "$IMG"/root/.ssh/authorized_keys
 }
 
 add_cert() {
@@ -59,7 +57,7 @@ unsquashfs -d "$IMG_OLD" "$rootfs"
 args="$*"
 while (( $# )); do
     case "$1" in
-        --dropbear) dropbear "${2-}"; shift ;;
+        --dropbear) dropbear "$2"; shift ;;
         --add-cert) add_cert "$2"; shift ;;
         --keep) trap 'rm -rf -- "$IMG_OLD"' EXIT ;;
     esac
