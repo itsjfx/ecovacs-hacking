@@ -1,12 +1,18 @@
 # notes for X1 Omni
 
-AI_px30
-usr/bin/upload_log.sh serial number
-grep for /home/ can see usernames
-in makefiles
-repo path and name
-
 <https://robotinfo.dev/detail_ecovacs.1vxt52_0.html>
+
+## info on X1
+
+* Horizon X3M SoC
+* `Linux deboot 4.14.74 #1 SMP PREEMPT Sat Sep 3 10:54:50 CST 2022 aarch64 GNU/Linux`
+* large use of linaro GNU toolchain for compiling tools like Python etc
+    * seems to be done on dev machines (?)
+* internal project name seems to be `px30-ai` or `AI_px30` (?)
+* "platform" of the device seems to be an `x3`
+* base distro unknown
+* serial number gets dumped in bootup phase, as well as MQTT config and some secrets
+* these are stored in the `SYSINFO` device (mentioned later), you can grab these values easily
 
 
 ## TODO
@@ -15,39 +21,9 @@ repo path and name
 2. run this `mdsctl bumbee "{\"todo\":\"QueryIotInfo\"}"`
     * ubi0_0/etc/conf/medusa/send_token_to_eco_iot.sh
 
-## traffic inspection
+## gaining access
 
-my setup is similar to: <https://github.com/bmartin5692/bumper/blob/master/docs/Sniffing.md>
-
-* unifi AP network for inspect tagged with inspect vlan
-* mikrotik router with inspect vlan setup, acting as dhcp server and pointing DNS & gateway to VM
-* VM: running dnsmasq + mitmproxy transparent
-* robot connected to inspect wifi
-
-first attempt:
-```
-[15:41:12.087][192.168.30.13:34520] client connect
-[15:41:12.255][192.168.30.13:34520] server connect 18.144.160.2:443
-[15:41:12.431][192.168.30.13:34520] Server TLS handshake failed. Certificate verify failed: unable to get local issuer certificate
-[15:41:12.432][192.168.30.13:34520] Unable to establish TLS connection with server (Certificate verify failed: unable to get local issuer certificate). Trying to establish TLS with client anyway. If you plan to redirect requests away from this server, consider setting `connection_strategy` to `lazy` to suppress early connections.
-[15:41:12.432][192.168.30.13:34520] server disconnect 18.144.160.2:443
-```
-
-defintely looks like we need to add the CA to the bot. firmware update time.
-
-## info / misc
-
-* Horizon X3M SoC
-* `Linux deboot 4.14.74 #1 SMP PREEMPT Sat Sep 3 10:54:50 CST 2022 aarch64 GNU/Linux`
-* large use of linaro GNU toolchain
-* base distro unknown
-
-serial number gets dumped in bootup phase, as well as MQTT config and some secrets
-
-these are stored in the `SYSINFO` device (mentioned later), you can grab these values easily
-
-
-## how to get a root shell via UART
+### how to get a root shell via UART
 
 i was able to do it on updated firmware. YMMV.
 
@@ -58,10 +34,9 @@ i was able to do it on updated firmware. YMMV.
     * e.g. for me `sudo minicom -D /dev/ttyUSB0 -C capture.txt`
 * root password: <https://builder.dontvacuum.me/ecopassword.php>
 
-## patching rootfs / how to get a root shell shell over SSH
+### patching rootfs / how to get a root shell shell over SSH
 
 * use `bin/patch-rootfs`
-* install dropbear with `--dropbear`
 * give a key as an arg, e.g. `--dropbear ~/.ssh/id_ed25519.pub`
     * this does no validation and just copies this to `/root/.ssh/authorized_keys`, so double check this file
 * then run the commands from `repack_rootfs.txt` to patch the file system with the `.mod` file
@@ -105,18 +80,47 @@ as rootfs is read-only, we need to flash it and install dropbear, and do some tw
 
 another option might be using an sshd which does not check `/etc/shells` or doing some `bubblewrap` but id rather just patch rootfs
 
+## getting secrets
+
+* `mdsctl bumbee "{"todo":"QueryIotInfo"}"` to get the mqtt important info
+* `mdsctl sys0 '{"pid_get":"get_all"}'` to get serial numbers and password for an mqtt endpoint (unused?)
+
+
+## traffic inspection
+
+my setup is similar to: <https://github.com/bmartin5692/bumper/blob/master/docs/Sniffing.md>
+
+* unifi AP network for inspect tagged with inspect vlan
+* mikrotik router with inspect vlan setup, acting as dhcp server and pointing DNS & gateway to VM
+* VM: running dnsmasq + mitmproxy transparent
+* robot connected to inspect wifi
+* my machine pulling netcap and `SSLKEYLOGFILE` from the VM and throwing it into wireshark
+
+* I inject the mitmproxy cert to `/etc/certs/ssl/`, but this doesn't seem to be needed, as the client on the robot doesn't seem to check certificates
+* It seems the MQTT endpoint is using a self-signed TLS cert, so `mitmproxy` was complaining. I had to add `--ssl-insecure` to fix it.
+* MQTT is also on port 443 which is annoying cause Wireguard doesn't pick it up. after decoding one message as MQTT it figures it out
+
+### wireshark
+
+* edit -> preferences -> protocols -> TLS
+    * RSA keys list, add `mitmproxy-ca.pem`
+    * set Pre-Master-Secret log filename
 
 ## networking
 
 ### hosts
 
-* 			"default_lb_srv":"lb.ecouser.net",
-* 					"lb_srv":"mq.ecouser.net",
-* 			"domain_china":"portal.ecouser.net",
-* 			"domain_others":"portal-ww.ecouser.net"
+maybe relevant: <https://github.com/bmartin5692/bumper/blob/master/docs/Sniffing.md>
 
+actual hosts:
 * a lot of calls to `api-rapp.cn.ecouser.net` to get baidu data
 * and main endpoint is `jmq-ngiot-au.area.ww.ecouser.net`
+
+unsure if used:
+* `lb.ecouser.net`
+* `mq.ecouser.net`
+* `portal.ecouser.net`
+* `portal-ww.ecouser.net`
 
 ## services (socket files)
 
@@ -126,7 +130,34 @@ another option might be using an sshd which does not check `/etc/shells` or doin
 
 ## listening services (ports)
 
-* `audio_daemon` ??
+dropbear is from me :)
+```
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:11311         0.0.0.0:*               LISTEN      2493/python
+tcp        0      0 127.0.0.1:54543         0.0.0.0:*               LISTEN      2367/medusa
+tcp        0      0 127.0.0.1:8081          0.0.0.0:*               LISTEN      2279/audioDaemon
+tcp        0      0 127.0.0.1:34003         0.0.0.0:*               LISTEN      2367/medusa
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      2429/dropbear
+tcp        0      0 127.0.0.1:44025         0.0.0.0:*               LISTEN      2372/deebot
+tcp        0      0 127.0.0.1:50489         0.0.0.0:*               LISTEN      2372/deebot
+tcp        0      0 127.0.0.1:58779         0.0.0.0:*               LISTEN      2622/speech_inter_c
+tcp        0      0 127.0.0.1:42427         0.0.0.0:*               LISTEN      2377/deebot
+tcp        0      0 127.0.0.1:2012          0.0.0.0:*               LISTEN      2367/medusa
+tcp        0      0 127.0.0.1:45157         0.0.0.0:*               LISTEN      2350/python
+tcp        0      0 127.0.0.1:41099         0.0.0.0:*               LISTEN      2622/speech_inter_c
+tcp        0      0 127.0.0.1:60461         0.0.0.0:*               LISTEN      2377/deebot
+udp        0      0 127.0.0.1:59901         0.0.0.0:*                           2367/medusa
+udp        0      0 0.0.0.0:67              0.0.0.0:*                           2950/dnsmasq
+udp        0      0 127.0.0.1:33560         0.0.0.0:*                           2372/deebot
+udp        0      0 0.0.0.0:15678           0.0.0.0:*                           2372/deebot
+udp        0      0 0.0.0.0:15678           0.0.0.0:*                           2377/deebot
+udp        0      0 0.0.0.0:2375            0.0.0.0:*                           2367/medusa
+udp        0      0 127.0.0.1:37222         0.0.0.0:*                           2377/deebot
+udp        0      0 127.0.0.1:33182         0.0.0.0:*                           2622/speech_inter_c
+```
+
+* `audio_daemon`
     * port 8081
     * `/etc/conf/audio_daemon.conf`
 ```
@@ -160,8 +191,8 @@ an example of updating device
 
 `/etc/wifi/bumbee_hook.sh`
 
-```
-    ubi_leb_update_str /dev/ubi2_0 -i "{\"did\":\"${did}\",\"password\":\"${password}\",\"type\":\"${type}\",\"sc\":\"${sc}\",\"lb\":\"${lb}\"}" -n ${tiot_leb_num} -s $((${tiot_block_size}*${tiot_count})) --leb_offset=$((${tiot_block_size}*${tiot_offset}))
+```bash
+ubi_leb_update_str /dev/ubi2_0 -i "{\"did\":\"${did}\",\"password\":\"${password}\",\"type\":\"${type}\",\"sc\":\"${sc}\",\"lb\":\"${lb}\"}" -n ${tiot_leb_num} -s $((${tiot_block_size}*${tiot_count})) --leb_offset=$((${tiot_block_size}*${tiot_offset}))
 ```
 
 * `xxd -a -g 1 ubi2_0.img > ubi2_0.hexdump` to get some data in grepable format
@@ -190,6 +221,12 @@ see `repack_rootfs.txt` from Telegram on how to rewrite (NOT TESTED)
 
 
 ## file system
+
+### interesting files
+
+* `/usr/bin/upload_log.sh` serial number
+* grep for `/home/` can see usernames in makefiles, as well as repo path and name
+
 
 ### mtd partitions
 
@@ -346,11 +383,16 @@ pstore on /mnt type pstore (rw,relatime)
 * DXAI = ROS config in `/etc/conf/`
 
 
-### software nodes
+### deebot / EROS
 
-* maybe part of medusa?
-* seems to be part of "eros"
-* or liberos
+* seems to be the main software alongside `medusa`
+* `/etc/rc.d/deebot.sh`
+* i believe it runs ROS, calls itself "EROS" (?), perhaps it wraps it?
+    * `/etc/conf/dxai_node.json` is fed into the `deebot` binary
+
+#### EROS software nodes/libaries
+
+* liberos = eros library files
 * `/usr/lib/node` has `.so` files
 * config for each in `/etc/conf/`
 * e.g. `/usr/lib/node/liberos_node_data_filter.so` and `/etc/conf/data_filter_node.json`
@@ -360,12 +402,12 @@ pstore on /mnt type pstore (rw,relatime)
 
 part of medusa? responsible for wifi? ota?
 
-`    #	mdsctl bumbee "{\"todo\":\"SetApConfig\",\"s\":\"${SSID}\",\"p\":\"${PASSPHRASE}\",\"sc\":\"${sc}\",\"sck2\":\"${sck2}\",\"lb\":\"${lb}\"}"`
-`/etc/wifi/bumbee_hook.sh`
+from `/etc/wifi/bumbee_hook.sh`:
+* `mdsctl bumbee "{\"todo\":\"SetApConfig\",\"s\":\"${SSID}\",\"p\":\"${PASSPHRASE}\",\"sc\":\"${sc}\",\"sck2\":\"${sck2}\",\"lb\":\"${lb}\"}"`
 
 ### cjp
 
-`cjp` can read some data and files
+`cjp` seems like a JSON parser, similar to `jq`
 
 ```
 ret=$(cat /tmp/config.bin)
@@ -388,7 +430,7 @@ SN=`cjp "${DEVICE_INFO}" string sn`
     * firmware updater??
 * `/usr/bin/fw_cut.sh`
     * firmware updater?
-    * `FW_FILE=/data/fw.bin             `
+    * `FW_FILE=/data/fw.bin`
     * mcu update?
 ```bash
 mdsctl rosnode '{"todo":"mcuota","type":3,"act":"start"}'
@@ -396,7 +438,6 @@ mdsctl rosnode '{"todo":"mcuota","type":0,"act":"start"}'
 sleep 1.5
 mdsctl "mcuota" '{"todo": "fw_mcu", "cmd": "mcu_upgrade_start", "file_path":"/tmp/mcu.bin"}'
 ```
-    * 
 
 ### netmon
 
