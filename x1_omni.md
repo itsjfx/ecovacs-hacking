@@ -31,7 +31,8 @@ i was able to do it on updated firmware. YMMV.
     * so gnd on the side closest to the micro usb
     * tx/rx on the other side
 * plug in USB, connect, then switch on
-    * e.g. for me `sudo minicom -D /dev/ttyUSB0 -C capture.txt`
+    * i run `bin/uart` to connect
+    * default baud of `115200`
 * root password: <https://builder.dontvacuum.me/ecopassword.php>
 
 ### patching firmware / rootfs
