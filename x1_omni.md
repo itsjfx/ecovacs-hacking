@@ -15,11 +15,37 @@
 * these are stored in the `SYSINFO` device (mentioned later), you can grab these values easily
 
 
-## TODO
+## TASKS
 
-1. look at each init script
-2. run this `mdsctl bumbee "{\"todo\":\"QueryIotInfo\"}"`
-    * ubi0_0/etc/conf/medusa/send_token_to_eco_iot.sh
+* [x] gain root shell via uart
+* [x] dump all file systems
+    * [x] see [dumping files](#dumping-files)
+* [x] rewrite the rootfs
+* [x] write script to rewrite rootfs
+    * [x] add dropbear for SSH
+    * [x] add ssl cert from mitmproxy
+    * [x] enable `autostart` init.d script so files from `/data/autostart` are loaded
+* [x] extract data from [SYSINFO](#sysinfo)
+* [x] get inspection working for HTTPS
+* [x] get inspection working for MQTT
+* [x] inspect files on file systems
+    * [ ] rootfs (mostly done except for):
+        * [ ] look at `/etc/init.d` scripts
+        * [ ] look at medusa config
+        * [ ] look at deebot config
+    * [ ] data
+    * [ ] models
+    * [ ] recovery ?
+
+* [ ] factory reset bot, and do a lot of net capturing of normal operations
+* [ ] look at bumper, and then figure out how to write a custom cloud
+    * write in node?
+    * something that can be run on both the robot and a remote machine
+    * [ ] TASKS
+        * [ ] simple operations
+            * [ ] start vacuum
+            * [ ] stop vacuum
+        * [ ] extract map
 
 ## gaining access
 
@@ -534,6 +560,8 @@ easy as it has dd and netcat. same old same old
 dd if=/dev/ubiblock0_0 | nc 192.168.88.7 6969
 nc -l -p 6969 | dd of=ubiblock0_0.img
 ```
+
+it may be easiest to `tar` `/tmp` and `/data`
 
 as it has curl, you can also use:
 * `bin/www` which is running python
