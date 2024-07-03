@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# patch script for rootfs
+# usage: patch-rootfs rootfs.img --dropbear --install-cert PATH_TO_CERT
+
+set -eu -o pipefail
+
+# helpers
+log() { printf '%s\n' "$*" >&2; }
+
+
+# patches
+dropbear() {
+    log 'Creating host keys...'
+    mkdir -p -m 755 "$IMG"/etc/dropbear
+    for type in rsa ecdsa ed25519; do
+        dropbearkey -t "$type" -f "$IMG"/etc/dropbear/dropbear_"$type"_host_key -C robot
+    done
+
+    log 'Patching /etc/shells to allow /bin/sh...'
+    echo /bin/sh >> "$IMG"/etc/shells
+
+    log 'Adding dropbear binaries...'
+    install -m 0755 "$ROOT"/lib/vendor/dropbear "$IMG"/usr/sbin/dropbear
+    for cmd in dbclient dropbearkey dropbearconvert scp; do
+        ln -sr "$IMG"/usr/sbin/dropbear "$IMG"/usr/bin/"$cmd"
+    done
+
+    if [[ -n "$1" ]]; then
+        log 'Adding key...'
+        mkdir -p -m 700 "$IMG"/root/.ssh/
+        # assume its one line and well-formed
+        install -m 0600 "$1" "$IMG"/root/.ssh/authorized_keys
+    fi
+}
+
+add_cert() {
+    echo adding cert "$1"
+}
+
+
+# main
+ROOT="$(readlink -f "$(dirname "$0")/../")"
+
+rootfs="$1"
+if ! [ -f "$rootfs" ]; then
+    log "rootfs file: $rootfs not found"
+    exit 1
+fi
+shift
+
+IMG="$(mktemp -d)"
+IMG_OLD="$(mktemp -d)"
+trap 'rm -rf -- "$IMG" "$IMG_OLD"' EXIT
+log "Working from $IMG"
+unsquashfs -d "$IMG" "$rootfs"
+unsquashfs -d "$IMG_OLD" "$rootfs"
+
+args="$*"
+while (( $# )); do
+    case "$1" in
+        --dropbear) dropbear "${2-}"; shift ;;
+        --add-cert) add_cert "$2"; shift ;;
+        --keep) trap 'rm -rf -- "$IMG_OLD"' EXIT ;;
+    esac
+    shift || true
+done
+
+
+# always do these patches
+log 'Patching autostart.sh...'
+sed -i 's/\!autostart.sh/autostart.sh/' "$IMG"/etc/rc.conf
+
+log 'Adding patch.txt...'
+echo "patched $(date --iso-8601=seconds --utc) with args: $args" >"$IMG"/root/patch.txt
+
+printf '\n\n'
+diff --no-dereference -r -N "$IMG_OLD" "$IMG" || true
+
+log "Remaking squashfs to $rootfs.mod"
+mksquashfs "$IMG" "$rootfs".mod -noappend -root-owned -p '/dev d 755 0 0' -p '/dev/console c 600 0 0 5 1'
