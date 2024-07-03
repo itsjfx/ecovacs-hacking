@@ -34,12 +34,13 @@ i was able to do it on updated firmware. YMMV.
     * e.g. for me `sudo minicom -D /dev/ttyUSB0 -C capture.txt`
 * root password: <https://builder.dontvacuum.me/ecopassword.php>
 
-### patching rootfs / how to get a root shell shell over SSH
+### patching firmware / rootfs
 
 * use `bin/patch-rootfs`
 * give a key as an arg, e.g. `--dropbear ~/.ssh/id_ed25519.pub`
     * this does no validation and just copies this to `/root/.ssh/authorized_keys`, so double check this file
 * then run the commands from `repack_rootfs.txt` to patch the file system with the `.mod` file
+* example usage from me: `bash bin/patch-rootfs dd/ubi0_0.img --dropbear ~/.ssh/id_ed25519.pub --add-cert /a/ecovacs-hacking/secrets/mitmproxy-ca-cert.cer --keep`
 
 
 ```
