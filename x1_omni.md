@@ -36,6 +36,11 @@
     * [ ] data
     * [ ] models
     * [ ] recovery ?
+* [ ] figure out how to do OTA properly
+    * really tricky cause the robot I got has already been updated to the latest firmware
+    * so I would probably have to fake the firmware version in SYSINFO and then trigger an OTA upgrade
+    * to see exactly how it works
+    * the main reason is I want to see how to do update the MCU and model files
 
 * [ ] factory reset bot, and do a lot of net capturing of normal operations
 * [ ] look at bumper, and then figure out how to write a custom cloud
