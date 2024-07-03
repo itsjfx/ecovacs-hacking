@@ -1,5 +1,11 @@
 # notes for X1 Omni
 
+AI_px30
+usr/bin/upload_log.sh serial number
+grep for /home/ can see usernames
+in makefiles
+repo path and name
+
 <https://robotinfo.dev/detail_ecovacs.1vxt52_0.html>
 
 
