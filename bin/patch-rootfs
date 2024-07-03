@@ -21,7 +21,7 @@ dropbear() {
     echo /bin/sh >> "$IMG"/etc/shells
 
     log 'Adding dropbear binaries...'
-    install -m 0755 "$ROOT"/lib/vendor/dropbear "$IMG"/usr/sbin/dropbear
+    install -m 0755 "$ROOT"/rootfs/usr/sbin/dropbear "$IMG"/usr/sbin/dropbear
     for cmd in dbclient dropbearkey dropbearconvert scp; do
         ln -sr "$IMG"/usr/sbin/dropbear "$IMG"/usr/bin/"$cmd"
     done
@@ -68,8 +68,9 @@ done
 
 
 # always do these patches
-log 'Patching autostart.sh...'
-sed -i 's/\!autostart.sh/autostart.sh/' "$IMG"/etc/rc.conf
+log 'Patching autostart.sh and dropbear.sh to init...'
+sed -i 's/\!autostart.sh/autostart.sh dropbear.sh/' "$IMG"/etc/rc.conf
+install -m 0755 "$ROOT"/rootfs/etc/rc.d/dropbear.sh "$IMG"/etc/rc.d/dropbear.sh
 
 log 'Adding patch.txt...'
 echo "patched $(date --iso-8601=seconds --utc) with args: $args" >"$IMG"/root/patch.txt
