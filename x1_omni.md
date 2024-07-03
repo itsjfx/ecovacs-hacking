@@ -370,6 +370,10 @@ pstore on /mnt type pstore (rw,relatime)
 * `/etc/conf/key-service.conf` to setup `hook` shell scripts
 
 
+## map
+
+`/data/MapFiles` TODO
+
 ## software
 
 ### internal python packages
@@ -380,7 +384,15 @@ pstore on /mnt type pstore (rw,relatime)
 
 ### MQTT
 
-* `mq-ww.ecouser.net`
+* real endpoint is `jmq-ngiot-au.area.ww.ecouser.net` on `443` !
+    * this is set in `/data/config/medusa/rwCfg.json`
+    * i'm unsure what happens if factory reset occurs, how does it know AU? where does it default to?
+* medusa is responsible for MQTT
+```
+~ # netstat -anp | grep 443
+tcp        0      0 192.168.30.3:51170      18.144.160.2:443        ESTABLISHED 2383/medusa
+```
+* `mq-ww.ecouser.net` (NOT SURE IF USED)
 
 ### some XMPP references
 
