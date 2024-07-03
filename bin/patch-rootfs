@@ -33,7 +33,14 @@ dropbear() {
 }
 
 add_cert() {
-    echo adding cert "$1"
+    log "Adding cert $1..."
+    local cert
+    cert="$(cat "$1")"
+    # append
+    echo "$cert">>"$IMG"/etc/ssl/certs/ecouser-net.pem
+    echo "$cert">>"$IMG"/etc/ssl/certs/iotspeechwss.pem
+    echo "$cert">>"$IMG"/etc/ssl/certs/kvswebrtccert.pem
+    echo "$cert">>"$IMG"/etc/ssl/certs/ca-certificates.crt
 }
 
 
