@@ -76,19 +76,20 @@ i was able to do it on updated firmware. YMMV.
 
 
 ```
-➜  ~ ssh root@192.168.30.13
-The authenticity of host '192.168.30.13 (192.168.30.13)' can't be established.
-ED25519 key fingerprint is SHA256:Tw8MjzRRDD/QPz9ZZyyIvULKGc5yoCL7th2d3TD4fGY.
+➜ ~ ssh root@192.168.30.3 -J inspect
+The authenticity of host '192.168.30.3 (<no hostip for proxy command>)' can't be established.
+ED25519 key fingerprint is SHA256:HRwOmu4FpoAbVlnm1rr+HvEGEWi3B7Jx+3mSp/OnBZU.
 This key is not known by any other names.
 Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added '192.168.30.13' (ED25519) to the list of known hosts.
-~ # bash
-bash-4.4# whoami
+Warning: Permanently added '192.168.30.3' (ED25519) to the list of known hosts.
+~ # whoami
 root
-bash-4.4# hostname
+~ # hostname
 deboot
-bash-4.4# exit
-~ # Connection to 192.168.30.13 closed.
+~ # cat patch.txt
+patched 2024-07-03T12:09:33+00:00 with args: --dropbear /home/jfx/.ssh/id_ed25519.pub --add-cert /a/ecovacs-hacking/secrets/mitmproxy-ca-cert.cer --keep
+~ # uname -a
+Linux deboot 4.14.74 #1 SMP PREEMPT Sat Sep 3 10:54:50 CST 2022 aarch64 GNU/Linux
 ```
 
 ### why? (first try)
