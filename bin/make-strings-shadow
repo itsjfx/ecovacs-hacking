@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# some chatgpt code to generate a shadow of a directory with strings applied
+
+#set -eu -o pipefail
+
+# Function to process each file
+process_file() {
+    local file="$1"
+    local output_dir="$2"
+
+    echo "processing file $1 and writing to $2 $output_dir/$(basename "$file")"
+
+    # Create directories in the shadow structure
+    mkdir -p "${output_dir}"
+
+    # Run strings on the file and save output to a corresponding file in the shadow structure
+    strings "${file}" > "${output_dir}/$(basename ${file}).txt"
+}
+
+# Main function to process each file recursively
+process_files() {
+    local input_dir="$1"
+    local output_root="$2"
+
+    # Loop through each file (recursively) in the input directory
+    find "${input_dir}" -type f | while read file; do
+        # Calculate relative path from input_dir
+        relative_path="${file#${input_dir}/}"
+        output_dir="${output_root}/$(dirname "${relative_path}")"
+
+        # Process the file
+        process_file "${file}" "${output_dir}"
+    done
+}
+
+# Example usage:
+#input_directory="/path/to/your/input/directory"
+#output_directory="/path/to/your/output/directory"
+
+# Call the function to process files
+process_files "$1" "$1/../$1-shadow-strings/"
+
