@@ -1,0 +1,1 @@
+ssh inspect 'tail -F -n +1 "$HOME"/.mitmproxy/sslkeylogfile.txt' >"$(dirname "$0")"/../secrets/sslkeylogfile.txt

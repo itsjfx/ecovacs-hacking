@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+capture="$1"
+shift
+trap 'ssh inspect ./bin/cleanup' EXIT
+ssh inspect ./bin/capture "$capture" "$@"
