@@ -1,6 +1,26 @@
 # Cloud Reversing
 
-## Wireshark filters
+## tshark
+
+```
+tshark -r thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt
+```
+
+* `tshark` output is not that helpful as is cause it doesn't decode `mqtt` payloads, so you have to write that stuff yourself based on the JSON output
+* but all the information is there
+
+## mqttshark
+
+use <https://github.com/itsjfx/mqttshark>
+
+```
+./mqttshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt --truncate-clientid=900 --truncate-payload=900 --truncate-topic=900
+```
+
+* where `55868` is the port
+* this is an easily parsable format, can do `sed` and such: `sed 's/.*payload="//; s/"$//'`
+
+## wireshark
 
 From server:
 ```
@@ -12,7 +32,7 @@ From robot:
 ip.src == 192.168.30.3 and mqtt and _ws.col.info != "Ping Request"
 ```
 
-## Glossary (TODO)
+## Glossary (message types)
 
 
 * topics: <https://github.com/DeebotUniverse/client.py/blob/33bc36b494a0fd7e3cebc917da0f3bc24006007b/deebot_client/mqtt_client.py#L38-L50>
@@ -49,11 +69,12 @@ ip.src == 192.168.30.3 and mqtt and _ws.col.info != "Ping Request"
 
 
 
+## Message Examples (TODO, delete this and automate this, done manually)
 
 
-## cfg
+### cfg
 
-### setting2
+#### setting2
 
 ```
 MQ Telemetry Transport Protocol, Publish Message
@@ -65,9 +86,9 @@ MQ Telemetry Transport Protocol, Publish Message
 ```
 
 
-## dtgcfg
+### dtgcfg
 
-### MQACL
+#### MQACL
 
 ```
 MQ Telemetry Transport Protocol, Publish Message
@@ -78,7 +99,7 @@ MQ Telemetry Transport Protocol, Publish Message
     Message : {"rcpRules":{"defaultACL":"drop","luaScript":"RUNPTElCPXJlcXVpcmUoImVjb2xpYi9lY29saWIiKWxhc3RQYXNzZWRQYXlsb2FkPXt9ZnVuY3Rpb24gR2V0TFBQZChhLGIpaWYgYT09RUNPTElCLkVudW1SY3BUeXBlLnJlcG9ydCBhbmQgbGFzdFBhc3NlZFBheWxvYWRbYl1+PW5pbCB0aGVuIHJldHVybiBsYXN0UGFzc2VkUGF5bG9hZFtiXS52YWwsbGFzdFBhc3NlZFBheWxvYWRbYl0udHMgZW5kO3JldHVybiBuaWwsbmlsIGVuZDtmdW5jdGlvbiBNcXR0UGFzc2VkKGMpbG9jYWwgZD1FQ09MSUIuUGFyc2VUb3BpYyhjLnRvcGljKWlmIGQucmNwVHlwZT09RUNPTElCLkVudW1SY3BUeXBlLnJlcG9ydCB0aGVuIGxhc3RQYXNzZWRQYXlsb2FkW2QucmNwTmFtZV09e31sYXN0UGFzc2VkUGF5bG9hZFtkLnJjcE5hbWVdLnZhbD1jLnBheWxvYWQ7bGFzdFBhc3NlZFBheWxvYWRbZC5yY3BOYW1lXS50cz1vcy50aW1lKCllbmQgZW5kO2Z1bmN0aW9uIE1xdHRBY2woYylsb2NhbCBlPWZhbHNlO2ZvciBmLGcgaW4gcGFpcnMoe30pZG8gaWYgYy5leHRyYUluZm8uZndWZXI9PWcgdGhlbiBlPXRydWU7YnJlYWsgZW5kIGVuZDtpZiBub3QgZSB0aGVuIGMuY2Ioe3Bhc3M9ZmFsc2UsdXNlckRhdGE9Yy51c2VyRGF0YX0pcmV0dXJuIGVuZDtpZiB0eXBlKG1haW4pfj0iZnVuY3Rpb24idGhlbiBjLmNiKHtwYXNzPXRydWUsdG9waWM9Yy50b3BpYyxwYXlsb2FkPWMucGF5bG9hZCxxb3M9Yy5xb3MscmV0YWluPWMucmV0YWluLHVzZXJEYXRhPWMudXNlckRhdGF9KXJldHVybiBlbmQ7bG9jYWwgaD1FQ09MSUIuUGFyc2VDbGllbnRJRChjLmNsaWVudElEKWxvY2FsIGQ9RUNPTElCLlBhcnNlVG9waWMoYy50b3BpYylpZiBoPT1uaWwgb3IgZD09bmlsIHRoZW4gYy5jYih7cGFzcz10cnVlLHRvcGljPWMudG9waWMscGF5bG9hZD1jLnBheWxvYWQscW9zPWMucW9zLHJldGFpbj1jLnJldGFpbix1c2VyRGF0YT1jLnVzZXJEYXRhfSlyZXR1cm4gZW5kO2xvY2FsIGksajtpLGo9R2V0TFBQZChkLnJjcFR5cGUsZC5yY3BOYW1lKW1haW4oe2V4dHJhSW5mbz1jLmV4dHJhSW5mbyxuYW1lPWMudXNlcm5hbWUsZGlkPWguZGlkLG1pZD1oLnR5cGVJRCxyZXNvdXJjZT1oLnJlc291cmNlLHJjcE5hbWU9ZC5yY3BOYW1lLHJjcFR5cGU9ZC5yY3BUeXBlLHRvRGlkPWQudG9ESUQsdG9NaWQ9ZC50b1R5cGVJRCx0b1Jlc291cmNlPWQudG9SZXNvdXJjZSxwYXlsb2FkVHlwZT1kLnBheWxvYWRUeXBlLHBheWxvYWQ9Yy5wYXlsb2FkLGxhc3RQYXNzZWRQYXlsb2FkPWksbGFzdFBhc3NlZFBheWxvYWRUUz1qfSxmdW5jdGlvbihrLGwpaWYgayB0aGVuIGMuY2Ioe3Bhc3M9dHJ1ZSx0b3BpYz1jLnRvcGljLHBheWxvYWQ9bCxxb3M9Yy5xb3MscmV0YWluPWMucmV0YWluLHVzZXJEYXRhPWMudXNlckRhdGF9KWVsc2UgYy5jYih7cGFzcz1mYWxzZSx1c2VyRGF0YT1jLnVzZXJEYXRhfSllbmQgZW5kKWVuZAo=","out":[{"topic":"iot/atr/onSimpleARMapSet/+/+/+/+","minInterval":0},{"topic":"iot/atr/onError/+/+/+/+","minInterval":0},{"topic":"iot/atr/onEvt/+/+/+/+","minInterval":0},{"topic":"iot/atr/CleanResult/+/+/+/+","minInterval":0},{"topic":"iot/atr/OfflineMap/+/+/+/+","minInterval":0},{"topic":"iot/atr/cruiseJPEG/+/+/+/+","minInterval":0},{"topic":"iot/atr/smartSpeakerTransaction/+/+/+/+","minInterval":0}]}}{"rcpRules":{"defaultACL":"drop","luaScript":"RUNPTElCPXJlcXVpcmUoImVjb2xpYi9lY29saWIiKWxhc3RQYXNzZWRQYXlsb2FkPXt9ZnVuY3Rpb24gR2V0TFBQZChhLGIpaWYgYT09RUNPTElCLkVudW1SY3BUeXBlLnJlcG9ydCBhbmQgbGFzdFBhc3NlZFBheWxvYWRbYl1+
 ```
 
-### setting2
+#### setting2
 
 ```
 MQ Telemetry Transport Protocol, Publish Message
@@ -98,9 +119,9 @@ MQ Telemetry Transport Protocol, Publish Message
 
 
 
-## atr
+### atr
 
-### onFwBuryPoint-bd_sysinfo
+#### onFwBuryPoint-bd_sysinfo
 
 ```
 MQ Telemetry Transport Protocol, Publish Message
@@ -113,9 +134,9 @@ MQ Telemetry Transport Protocol, Publish Message
 
 
 
-## p2p
+### p2p
 
-### Set Time
+#### Set Time
 
 req:
 ```
@@ -137,7 +158,7 @@ MQ Telemetry Transport Protocol, Publish Message
     Message: {"ret":"ok"}
 ```
 
-### Get Info
+#### Get Info
 
 req:
 ```
@@ -159,7 +180,7 @@ MQ Telemetry Transport Protocol, Publish Message
     Message: {"header":{"pri":1,"tzm":600,"ts":"1720174484969","ver":"0.0.1","fwVer":"2.3.9","hwVer":"0.1.1","wkVer":"0.1.54"},"body":{"code":0,"msg":"ok","data":{"getMapState":{"data":{"state":"built"},"code":0,"msg":"ok"},"getChargeState":{"code":0,"msg":"ok","data":{"isCharging":1,"mode":"slot"}},"getSleep":{"code":0,"msg":"ok","data":{"enable":0}},"getError":{"code":0,"msg":"","data":{"code":[0]}}}}}
 ```
 
-### Go to dock
+#### Go to dock
 
 req:
 ```
