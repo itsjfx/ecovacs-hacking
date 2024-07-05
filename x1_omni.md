@@ -42,6 +42,11 @@
     * to see exactly how it works
     * the main reason is I want to see how to do update the MCU and model files
 
+* [ ] audit / collect data about the API
+    * instead of painfully getting each message and documenting the wireshark info, write a script to parse wireshark and spit out yaml and/or markdown?
+    * to generate fixtures and make it easy to test with dummy data
+    * and sanitise secrets
+
 * [ ] factory reset bot, and do a lot of net capturing of normal operations
 * [ ] look at bumper, and then figure out how to write a custom cloud
     * write in node?
@@ -114,10 +119,57 @@ as rootfs is read-only, we need to flash it and install dropbear, and do some tw
 
 another option might be using an sshd which does not check `/etc/shells` or doing some `bubblewrap` but id rather just patch rootfs
 
-## getting secrets
+## secrets
 
-* `mdsctl bumbee "{"todo":"QueryIotInfo"}"` to get the mqtt important info
-* `mdsctl sys0 '{"pid_get":"get_all"}'` to get serial numbers and password for an mqtt endpoint (unused?)
+* `mdsctl bumbee '{"todo":"QueryIotInfo"}'` for MQTT
+* `mdsctl sys0 '{"pid_get":"get_all"}'` similar info, plus mac address
+* the below secrets can be grabbed with these commands. they live in [SYSINFO volume](#sysinfo). see a hexdump
+
+* `did` - device ID
+    * a GUID value
+    * used in MQTT
+        * part of client ID
+        * part of topic name
+* `mid` - unknown meaning
+    * 6 character lowercase(?) alphanumeric value
+    * used in MQTT
+        * part of client ID
+        * part of topic name
+* `resource`
+    * 4 character alphanumeric value
+    * used in MQTT
+        * part of client ID
+        * part of topic name
+* `name` / `sn` - the robots serial number under dust bin
+    * 20 character alphanumeric value
+    * used for calculating root password
+    * used as username for MQTT
+    * used when downloading firmware
+* `password` - password for MQTT
+    * 8 character alphanumeric value
+    * used as password for MQTT
+* `mac` - robots mac address
+    * used when downloading firmware
+
+data from mqtt:
+* `iot/p2p/IDToken/HelperMQClientId-awsna-sts-ngiot-mqsjmq-42/ecosys/1234/x/x/x/m/x/j`
+    * outputs a JWT scoped to the robot (`did` & `resource`) with a 3 month expiry
+    * unsure where this is used
+
+X1 platform = `plat=QJ2077`
+
+### MQTT
+
+* my endpoint is `jmq-ngiot-au.area.ww.ecouser.net` on `443`
+    * this is set in `/data/config/medusa/rwCfg.json`
+    * i'm unsure what happens if factory reset occurs, how does it know AU? where does it default to?
+    * creds are in SYSINFO, see [#secrets](#secrets) for more details
+    * also in SYSINFO `mq-ww.ecouser.net` (NOT SURE IF USED)
+* medusa is responsible for MQTT. meaning it's orchestrating a lot of the robot function
+```
+~ # netstat -anp | grep 443
+tcp        0      0 192.168.30.3:51170      18.144.160.2:443        ESTABLISHED 2383/medusa
+```
 
 
 ## traffic inspection
@@ -132,7 +184,7 @@ my setup is similar to: <https://github.com/bmartin5692/bumper/blob/master/docs/
 
 * I inject the mitmproxy cert to `/etc/certs/ssl/`, but this doesn't seem to be needed, as the client on the robot doesn't seem to check certificates
 * It seems the MQTT endpoint is using a self-signed TLS cert, so `mitmproxy` was complaining. I had to add `--ssl-insecure` to fix it.
-* MQTT is also on port 443 which is annoying cause Wireguard doesn't pick it up. after decoding one message as MQTT it figures it out
+* MQTT is also on port 443 which is annoying cause Wireshark doesn't pick it up. after decoding one message as MQTT (assigning the ephemeral port) it figures it out
 
 ### wireshark
 
@@ -395,18 +447,6 @@ pstore on /mnt type pstore (rw,relatime)
 * unsure if anything on the bot uses them
 * e.g. `/usr/lib/python2.7/site-packages/ota`
 
-### MQTT
-
-* real endpoint is `jmq-ngiot-au.area.ww.ecouser.net` on `443` !
-    * this is set in `/data/config/medusa/rwCfg.json`
-    * i'm unsure what happens if factory reset occurs, how does it know AU? where does it default to?
-* medusa is responsible for MQTT
-```
-~ # netstat -anp | grep 443
-tcp        0      0 192.168.30.3:51170      18.144.160.2:443        ESTABLISHED 2383/medusa
-```
-* `mq-ww.ecouser.net` (NOT SURE IF USED)
-
 ### some XMPP references
 
 * `mds_wukong_get_best_iot_svr.sh`
@@ -549,8 +589,8 @@ broken into plugins: `/usr/lib/medusa`
     * user DB? user ecovacs info?
 
 
-possibly some config in `/dev/ubi2_0` with file offsets?
-`			"joylink_tiot_parameters_offset":10240,`
+some config in `/dev/ubi2_0` with file offsets
+* `"joylink_tiot_parameters_offset":10240,`
 
 
 example commands (from `/etc/conf/factory.conf`)
