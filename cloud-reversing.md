@@ -8,6 +8,9 @@ tshark -r thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile
 
 * `tshark` output is not that helpful as is cause it doesn't decode `mqtt` payloads, so you have to write that stuff yourself based on the JSON output
 * but all the information is there
+* e.g. `tshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt -T json | jq'
+* or to show msgs with data (probably publish ones)
+  * `tshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt -T json | jq -r '.[]._source.layers.mqtt | if .["mqtt.msg"] != null then . else empty end'`
 
 ## mqttshark
 
