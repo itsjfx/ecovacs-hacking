@@ -1,6 +1,6 @@
 # notes for X1 Omni
 
-<https://robotinfo.dev/detail_ecovacs.1vxt52_0.html>
+<https://robotinfo.dev/detail_ecovacs.***REMOVED***_0.html>
 
 ## info on X1
 
@@ -432,13 +432,13 @@ pstore on /mnt type pstore (rw,relatime)
 ### OTA
 
 * this ran after factory reset
-    * `GET https://portal-ww.ecouser.net/api/ota/products/wukong/class/1vxt52/firmware/latest.json?sn=x&ver=2.3.9&mac=x&plat=QJ2077&module=fw0 HTTP/1.1`
+    * `GET https://portal-ww.ecouser.net/api/ota/products/wukong/class/***REMOVED***/firmware/latest.json?sn=x&ver=2.3.9&mac=x&plat=QJ2077&module=fw0 HTTP/1.1`
     * UA: `wget`, some script
-    * this works `curl 'https://portal-ww.ecouser.net/api/ota/products/wukong/class/1vxt52/firmware/latest.json?sn=x&ver=1.8.7&mac=x&plat=QJ2077&module=fw0'`
+    * this works `curl 'https://portal-ww.ecouser.net/api/ota/products/wukong/class/***REMOVED***/firmware/latest.json?sn=x&ver=1.8.7&mac=x&plat=QJ2077&module=fw0'`
         * gives a bin file
 * in some log files, OTA for AI models?
     * `/data/log/models_update.log`
-    * `https://portal-ww.ecouser.net:443/api/ota/products/wukong/class/1vxt52/firmware/latest.json?sn=x&ver=2.3.9&mac=x&plat=QJ2077&module=AIConfig`
+    * `https://portal-ww.ecouser.net:443/api/ota/products/wukong/class/***REMOVED***/firmware/latest.json?sn=x&ver=2.3.9&mac=x&plat=QJ2077&module=AIConfig`
         * note `module=AIConfig`
 
 ### internal python packages

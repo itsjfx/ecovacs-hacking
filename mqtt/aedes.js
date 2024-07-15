@@ -1,12 +1,19 @@
 const Aedes = require('aedes')
 const { createServer } = require('net')
+const fs = require('fs')
 
 function startAedes () {
-  const port = 1883
+//  const port = 1883
+  const port = 6969
 
   const aedes = Aedes({})
 
-  const server = createServer(aedes.handle)
+//  const server = createServer(aedes.handle)
+  const options = {
+    key: fs.readFileSync('./server.key'),
+    cert: fs.readFileSync('./server.crt'),
+  };
+  const server = require('tls').createServer(options, aedes.handle)
 
   server.listen(port, '0.0.0.0', function () {
     console.log('Aedes listening on port:', port)

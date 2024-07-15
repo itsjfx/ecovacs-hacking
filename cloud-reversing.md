@@ -3,12 +3,11 @@
 ## tshark
 
 ```
-tshark -r thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt
+tshark -r /path/to/file.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tls.port==443,mqtt
 ```
 
 * `tshark` output is not that helpful as is cause it doesn't decode `mqtt` payloads, so you have to write that stuff yourself based on the JSON output
 * but all the information is there
-* e.g. `tshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt -T json | jq'
 * or to show msgs with data (probably publish ones)
   * `tshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt -T json | jq -r '.[]._source.layers.mqtt | if .["mqtt.msg"] != null then . else empty end'`
 
@@ -17,10 +16,9 @@ tshark -r thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile
 use <https://github.com/itsjfx/mqttshark>
 
 ```
-./mqttshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt --truncate-clientid=900 --truncate-payload=900 --truncate-topic=900
+./mqttshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tls.port==443,mqtt --truncate-clientid=900 --truncate-payload=900 --truncate-topic=900
 ```
 
-* where `55868` is the port
 * this is an easily parsable format, can do `sed` and such: `sed 's/.*payload="//; s/"$//'`
 
 ## wireshark
@@ -60,9 +58,9 @@ ip.src == 192.168.30.3 and mqtt and _ws.col.info != "Ping Request"
 ### p2p message
 
 * req: request to robot (from cloud) `q`
-    * topic format: `iot/${TYPE}/${MSG}/HelperMQClientId-awsna-sts-ngiot-mqsjmp-ID/ecosys/1234/${DID}/${MID}/${RESOURCE}/q/${REQUEST_ID}/j
+    * topic format: `iot/${TYPE}/${MSG}/HelperMQClientId-awsna-sts-ngiot-mqsjmp-ID/ecosys/1234/${DID}/${MID}/${RESOURCE}/q/${REQUEST_ID}/j`
 * res: response from robot (to cloud) `p`
-    * topic format: `iot/${TYPE}/${MG}/${DID}/${MID}/${RESOURCE}/HelperMQClientId-awsna-sts-ngiot-mqsjmp-ID/ecosys/1234/p/${REQUEST_ID}/j
+    * topic format: `iot/${TYPE}/${MG}/${DID}/${MID}/${RESOURCE}/HelperMQClientId-awsna-sts-ngiot-mqsjmp-ID/ecosys/1234/p/${REQUEST_ID}/j`
 
 ### cfg message
 
@@ -84,7 +82,7 @@ MQ Telemetry Transport Protocol, Publish Message
     Header Flags: 0x30, Message Type: Publish Message, QoS Level: At most once delivery (Fire and Forget)
     Msg Len: 138
     Topic Length: 67
-    Topic: iot/cfg/did/1vxt52/resource/j/setting2
+    Topic: iot/cfg/***REMOVED***/***REMOVED***/***REMOVED***/j/setting2
     Message: {"setting2":{"cfg":{"improve":{"version":"11.16","isAccept":false}}}}
 ```
 
