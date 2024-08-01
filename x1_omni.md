@@ -302,7 +302,7 @@ earlycon kgdboc=ttyS0 console=ttyS0,115200 raid=noautodetect hobotboot.reson=POW
 
 to unsquash run: `unsquashfs -d ubi0_0 ./ubi0_0.img`
 
-see `repack_rootfs.txt` from Telegram on how to rewrite (NOT TESTED)
+see `repack_rootfs.txt` from Telegram on how to rewrite
 
 
 
