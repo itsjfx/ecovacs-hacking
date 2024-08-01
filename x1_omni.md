@@ -42,20 +42,20 @@
     * to see exactly how it works
     * the main reason is I want to see how to do update the MCU and model files
 
-* [ ] audit / collect data about the API
+* [x] audit / collect data about the API
     * instead of painfully getting each message and documenting the wireshark info, write a script to parse wireshark and spit out yaml and/or markdown?
     * to generate fixtures and make it easy to test with dummy data
     * and sanitise secrets
 
-* [ ] factory reset bot, and do a lot of net capturing of normal operations
-* [ ] look at bumper, and then figure out how to write a custom cloud
-    * write in node?
-    * something that can be run on both the robot and a remote machine
-    * [ ] TASKS
-        * [ ] simple operations
-            * [ ] start vacuum
-            * [ ] stop vacuum
-        * [ ] extract map
+* [ ] remove from firmware
+    * [ ] speech recognition
+    * [ ] automatic OTA (cron?)
+
+* [x] factory reset bot, and do a lot of net capturing of normal operations
+
+* [x] dummy Valetudo implementation
+    * [x] get basic data like battery
+    * [ ] get map data
 
 ## gaining access
 
@@ -162,9 +162,9 @@ X1 platform = `plat=QJ2077`
 
 * my endpoint is `jmq-ngiot-au.area.ww.ecouser.net` on `443`
     * this is set in `/data/config/medusa/rwCfg.json`
-    * i'm unsure what happens if factory reset occurs, how does it know AU? where does it default to?
     * creds are in SYSINFO, see [#secrets](#secrets) for more details
     * also in SYSINFO `mq-ww.ecouser.net` (NOT SURE IF USED)
+    * **this is set during WiFi provisioning, and can be overridden, i do so in ValetudoVE**
 * medusa is responsible for MQTT. meaning it's orchestrating a lot of the robot function
 ```
 ~ # netstat -anp | grep 443
@@ -468,7 +468,7 @@ pstore on /mnt type pstore (rw,relatime)
 * hardcoded creds to a joshua
 * script in `cgi-bin` called `startFct`, ELF binary
 * `reqDo` another binary
-* TODO what is this is it even running on boot?
+* **THIS SEEMS TO BE USED FOR WIFI PROVISIONING AS AN RPC**
 
 ### ROS
 
