@@ -1,6 +1,6 @@
 # notes for X1 Omni
 
-<https://robotinfo.dev/detail_ecovacs.***REMOVED***_0.html>
+<https://robotinfo.dev/detail_ecovacs.1vxt52_0.html>
 
 ## info on X1
 
