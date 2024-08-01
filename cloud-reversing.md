@@ -6,10 +6,9 @@
 tshark -r /path/to/file.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tls.port==443,mqtt
 ```
 
-* `tshark` output is not that helpful as is cause it doesn't decode `mqtt` payloads, so you have to write that stuff yourself based on the JSON output
-* but all the information is there
-* or to show msgs with data (probably publish ones)
-  * `tshark -r /tmp/thing.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tcp.port==55868,mqtt -T json | jq -r '.[]._source.layers.mqtt | if .["mqtt.msg"] != null then . else empty end'`
+* tshark -T ek -r /path/to/file.pcap -o tls.keylog_file:/a/ecovacs-hacking/secrets/sslkeylogfile.txt -d tls.port==443,mqtt -o mqtt.show_msg_as_text:TRUE | python3 bin/parse.py > /tmp/blah.yaml
+* this spits out a yaml file with the p2p messages batched up by request response
+* this means you can parse it pretty easily with your favourite tool, e.g. `jq` if convert to `json`, and its super readable cause its in yaml
 
 ## mqttshark
 
