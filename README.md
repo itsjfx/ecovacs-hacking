@@ -9,3 +9,4 @@ my notes hacking ecovacs hardware
 
 * [GPL-3.0](./LICENSE)
 * [vendor/dropbear](./LICENSE.dropbear)
+* [vendor/strace](https://github.com/strace/strace/blob/master/COPYING)
